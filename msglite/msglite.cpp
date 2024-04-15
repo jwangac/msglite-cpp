@@ -345,11 +345,9 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf)
     for (int ii = 0; ii < msg.len; ii++) {
         switch (msg.obj[ii].type) {
             case Object::Bool: {
-                // A boolean value other than 0/1 can cause undefined behavior.
+                // An object marked as a bool type but having a value other than
+                // 0/1 (mostly due to a mistake) can cause undefined behavior.
                 // Use the 'volatile' keyword to enforce a check here.
-                //
-                // Update: Why did I introduce this check?
-                //         I forgot the reason but chose to leave it as it is.
                 volatile uint8_t bool_in_byte = msg.obj[ii].as.String[0];
                 if (bool_in_byte != 0 && bool_in_byte != 1)
                     return 0;
