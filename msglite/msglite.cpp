@@ -767,15 +767,8 @@ bool Unpacker::put(uint8_t byte)
     }
 
     unpack_ll_status status = unpack_ll_body(buf, len, msg);
-    if (status == unpack_ll_success) {
-        len = 0;
-        return true;
-    } else if (status == unpack_ll_need_more_bytes) {
-        return false;
-    } else {
-        len = 0;
-        return false;
-    }
+    len = 0; // Whether successful or not, we need to reset the unpack.
+    return status == unpack_ll_success;
 }
 
 // 2. Retrieve a reference to the message. If this function does not
