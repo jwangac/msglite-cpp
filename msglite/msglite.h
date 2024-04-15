@@ -55,13 +55,17 @@ namespace MsgLite {
         uint8_t len;
         Object obj[15];
 
-        // Constructor
-        template <typename... Args>
-        Message(Args... args)
+        // Constructors
+        Message()
         {
-            static_assert(sizeof...(Args) <= 15, "Number of objects exceeds limit");
-            len = sizeof...(Args);
-            Object tmp[] = { Object(args)... };
+            len = 0;
+        }
+        template <typename Type, typename... Types>
+        Message(Type first, Types... others)
+        {
+            static_assert(1 + sizeof...(others) <= 15, "The number of objects exceeds the limit.");
+            len = 1 + sizeof...(others);
+            Object tmp[] = { Object(first), Object(others)... };
             for (int ii = 0; ii < len; ii++) {
                 obj[ii] = tmp[ii];
             }

@@ -1,6 +1,6 @@
 all: msglite/msglite.cpp test/test.cpp
 	@mkdir -p output/
-	gcc -std=c++11 -g -Wall -Wextra -I./msglite $^ -o output/test
+	gcc -std=c++11 -g -Wall -Wextra -Wpedantic -I./msglite $^ -o output/test
 	./output/test
 
 format:
