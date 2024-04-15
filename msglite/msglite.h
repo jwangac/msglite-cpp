@@ -141,6 +141,7 @@ namespace MsgLite {
     private:
         uint8_t buf[MAX_MSG_LEN];
         uint8_t len;
+        int8_t remaining_objects, remaining_bytes;
         uint32_t crc_header, crc_body;
         Message msg;
     };

@@ -185,6 +185,57 @@ static uint32_t crc32(uint32_t crc, const uint8_t* buf, size_t size)
     return crc ^ ~0U;
 }
 
+static int8_t bytes_of_type(uint8_t type_byte)
+{
+    switch (type_byte) {
+        // Bool (false)
+        case 0xC2:
+            return 0;
+        // Bool (true)
+        case 0xC3:
+            return 0;
+        // Uint8
+        case 0xCC:
+            return 1;
+        // Uint16
+        case 0xCD:
+            return 2;
+        // Uint32
+        case 0xCE:
+            return 4;
+        // Uint64
+        case 0xCF:
+            return 8;
+        // Int8
+        case 0xD0:
+            return 1;
+        // Int16
+        case 0xD1:
+            return 2;
+        // Int32
+        case 0xD2:
+            return 4;
+        // Int64
+        case 0xD3:
+            return 8;
+        // Float
+        case 0xCA:
+            return 4;
+        // Double
+        case 0xCB:
+            return 8;
+        // String and others
+        default: {
+            // String
+            if (0xA0 <= type_byte && type_byte <= 0xAF)
+                return type_byte - 0xA0;
+
+            // Unknown type
+            return -1;
+        }
+    }
+}
+
 using namespace MsgLite;
 
 Object::Object()
@@ -680,6 +731,31 @@ bool Unpacker::put(uint8_t byte)
         }
         // Body
         default: {
+            if (len == 6) {
+                // Message length
+                remaining_objects = byte - 0x90;
+                if (remaining_objects > 15) {
+                    len = 0; // Failed, reset the unpacker
+                    return false;
+                }
+                remaining_bytes = 0;
+            } else {
+                if (remaining_bytes > 0) {
+                    remaining_bytes--;
+                } else {
+                    if (remaining_objects > 0) {
+                        remaining_objects--;
+                        remaining_bytes = bytes_of_type(byte);
+                        if (remaining_bytes < 0) {
+                            len = 0; // Failed, reset the unpacker
+                            return false;
+                        }
+                    } else {
+                        len = 0; // Failed, reset the unpacker
+                        return false;
+                    }
+                }
+            }
             crc_body = crc32(crc_body, &byte, 1);
             buf[len++] = byte;
         }
@@ -688,11 +764,12 @@ bool Unpacker::put(uint8_t byte)
     if (len < MIN_MSG_LEN)
         return false; // Still too short
 
+    if (remaining_objects > 0 || remaining_bytes > 0)
+        return false; // Message not fully received
+
     if (crc_header != crc_body) {
         return false; // Checksum mismatch
     }
-
-    // Here, the checksum is correct, but the message may not be ready yet.
 
     unpack_ll_status status = unpack_ll_body(buf, len, msg);
     if (status == unpack_ll_success) {
