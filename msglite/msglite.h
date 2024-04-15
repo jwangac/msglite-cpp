@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace MsgLite {
@@ -145,4 +146,7 @@ namespace MsgLite {
         uint32_t crc_header, crc_body;
         Message msg;
     };
+
+    // Checksum function used by MsgLite
+    uint32_t crc32(uint32_t crc, const uint8_t* buf, size_t size);
 }

@@ -177,7 +177,7 @@ static const uint32_t crc32_table[] = {
 
 // CRC32 code derived from work by Gary S. Brown.
 // https://opensource.apple.com/source/xnu/xnu-1456.1.26/bsd/libkern/crc32.c
-static uint32_t crc32(uint32_t crc, const uint8_t* buf, size_t size)
+uint32_t MsgLite::crc32(uint32_t crc, const uint8_t* buf, size_t size)
 {
     crc = crc ^ ~0U;
     while (size--)
