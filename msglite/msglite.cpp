@@ -703,7 +703,7 @@ bool Unpacker::put(uint8_t byte)
                 return false;
             }
             buf[len++] = byte;
-            break;
+            return false;
         }
         // Checksum
         case 1: {
@@ -714,7 +714,7 @@ bool Unpacker::put(uint8_t byte)
             crc_header = 0;
             crc_body = 0;
             buf[len++] = byte;
-            break;
+            return false;
         }
         case 2:
         case 3:
@@ -722,7 +722,7 @@ bool Unpacker::put(uint8_t byte)
         case 5: {
             crc_header = (crc_header << 8) + byte;
             buf[len++] = byte;
-            break;
+            return false;
         }
         // Body
         default: {
