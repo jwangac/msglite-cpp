@@ -59,7 +59,7 @@ namespace MsgLite {
         template <typename... Args>
         Message(Args... args)
         {
-            static_assert(sizeof...(Args) <= 15);
+            static_assert(sizeof...(Args) <= 15, "Number of objects exceeds limit");
             len = sizeof...(Args);
             Object tmp[] = { Object(args)... };
             for (int ii = 0; ii < len; ii++) {
