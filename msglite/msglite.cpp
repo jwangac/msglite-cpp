@@ -445,10 +445,7 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf)
     // Checksum (CRC32)
     {
         uint32_t crc = crc32(0, buf + 6, pos - 6);
-        buf[2] = (crc >> 24) & 0xFF;
-        buf[3] = (crc >> 16) & 0xFF;
-        buf[4] = (crc >> 8) & 0xFF;
-        buf[5] = crc & 0xFF;
+        to_4_bytes(crc, buf + 2);
     }
 
     return pos;
