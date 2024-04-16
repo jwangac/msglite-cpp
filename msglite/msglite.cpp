@@ -177,7 +177,7 @@ static const uint32_t crc32_table[] = {
 
 // CRC32 code derived from work by Gary S. Brown.
 // https://opensource.apple.com/source/xnu/xnu-1456.1.26/bsd/libkern/crc32.c
-uint32_t MsgLite::crc32(uint32_t crc, const uint8_t* buf, size_t size)
+uint32_t MsgLite::CRC32B(uint32_t crc, const uint8_t* buf, size_t size)
 {
     crc = crc ^ ~0U;
     while (size--)
@@ -444,7 +444,7 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf)
 
     // Checksum (CRC32)
     {
-        uint32_t crc = crc32(0, buf + 6, pos - 6);
+        uint32_t crc = CRC32B(0, buf + 6, pos - 6);
         to_4_bytes(crc, buf + 2);
     }
 
@@ -632,7 +632,7 @@ bool MsgLite::Unpack(const uint8_t* buf, uint8_t len, Message& msg)
         return false;
     uint32_t crc_header, crc_body;
     from_4_bytes(crc_header, buf + 2);
-    crc_body = crc32(0, buf + 6, len - 6);
+    crc_body = CRC32B(0, buf + 6, len - 6);
     if (crc_body != crc_header)
         return false;
 
@@ -751,7 +751,7 @@ bool Unpacker::put(uint8_t byte)
                     }
                 }
             }
-            crc_body = crc32(crc_body, &byte, 1);
+            crc_body = CRC32B(crc_body, &byte, 1);
             buf[len++] = byte;
         }
     }

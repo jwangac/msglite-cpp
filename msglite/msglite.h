@@ -148,5 +148,5 @@ namespace MsgLite {
     };
 
     // Checksum function used by MsgLite
-    uint32_t crc32(uint32_t crc, const uint8_t* buf, size_t size);
+    uint32_t CRC32B(uint32_t crc, const uint8_t* buf, size_t size);
 }
