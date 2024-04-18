@@ -1,3 +1,4 @@
+#include <cassert>
 #include <inttypes.h>
 #include <limits>
 #include <stdint.h>
@@ -90,14 +91,47 @@ int main(void)
     }
 
     if (true) {
+        MsgLite::Message msg("helloworld");
+        MsgLite::Buffer buf;
+        MsgLite::Pack(msg, buf);
+        assert(packer.put(msg));
+        int c, ii = 0;
+        while ((c = packer.get()) != -1) {
+            assert(c == buf.data[ii++]);
+        }
+        assert(packer.get() == -1);
+
+        msg.obj[0].type = MsgLite::Object::Bool;
+        assert(MsgLite::Pack(msg, buf.data, sizeof(buf.data)) < 0);
+        assert(!MsgLite::Pack(msg, buf));
+        assert(!packer.put(msg));
+        assert(packer.get() == -1);
+    }
+
+    if (true) {
+        MsgLite::Message largest("helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello");
+        MsgLite::Buffer buf;
+        assert(MsgLite::Pack(largest, buf));
+        assert(MsgLite::Unpack(buf, largest));
+        assert(buf.len == MsgLite::MAX_MSG_LEN);
+    }
+
+    if (true) {
+        MsgLite::Buffer buf;
+        MsgLite::Message broken(false);
+        broken.obj[0].as.Uint8 = 2;
+        assert(!MsgLite::Pack(broken, buf));
+    }
+
+    if (true) {
         FILE* fd = fopen("./test/data_static.bin", "rb");
 
-        int c;
+        int c, cnt = 0;
         while ((c = fgetc(fd)) != EOF) {
             if (unpacker.put(c))
-                print(unpacker.get());
+                cnt++;
         }
-
+        assert(cnt == 17);
         fclose(fd);
     }
 
@@ -109,6 +143,7 @@ int main(void)
             if (unpacker.put(c))
                 cnt++;
         }
+        assert(4500 <= cnt && cnt <= 5500);
         printf("Number of messages unpacked from lossy data stream: %d\n", cnt);
 
         fclose(fd);
