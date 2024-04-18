@@ -1,6 +1,5 @@
 #include "msglite.h"
 
-#include <cassert>
 #include <cstring>
 #include <limits>
 
@@ -11,6 +10,7 @@ static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 float required");
 static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 double required");
 
 #ifdef MSGLITE_BOUND_CHECKING
+#include <cassert>
 #define Assert(x, msg) assert((x) && msg)
 #else
 #define Assert(x, msg)
