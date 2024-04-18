@@ -586,8 +586,11 @@ int16_t MsgLite::Pack(const Message& msg, uint8_t* raw_buf, uint8_t len)
 // Returns true if successful, false if packing fails.
 bool MsgLite::Pack(const Message& msg, Buffer& buf)
 {
-    buf.len = Pack(msg, buf.data, sizeof(buf.data));
-    return buf.len > 0;
+    int16_t len = Pack(msg, buf.data, sizeof(buf.data));
+    if (len < 0)
+        return false;
+    buf.len = (uint8_t)len;
+    return true;
 }
 
 // Low-level function that deserializes message body from a byte array.
