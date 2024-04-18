@@ -791,13 +791,15 @@ Packer::Packer(void)
 // 1. Call put() to serialize a message. Returns true if successful.
 bool Packer::put(const Message& msg)
 {
-    len = Pack(msg, raw_buf, sizeof(raw_buf));
-    if (len == 0) {
+    int16_t ret = Pack(msg, raw_buf, sizeof(raw_buf));
+    if (ret < 0) {
         // Ensure pos > len, which makes get() returns -1.
         pos = MAX_MSG_LEN + 1;
+        len = 0;
         return false;
     }
     pos = 0;
+    len = (uint8_t)ret;
     return true;
 }
 
