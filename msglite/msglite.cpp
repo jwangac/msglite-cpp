@@ -16,6 +16,7 @@ static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 double required"
 #define Assert(x, msg)
 #endif
 
+// helper classes for bound checking
 namespace {
     // Byte array with (conditional) bound checking
     class Slice {
@@ -250,12 +251,6 @@ static uint32_t crc32b(uint32_t crc, ReadonlySlice buf)
     for (int ii = 0; ii < buf.len; ++ii)
         crc = crc32_table[(crc ^ buf[ii]) & 0xFF] ^ (crc >> 8);
     return crc ^ ~0U;
-}
-
-// Exposed checksum function used by MsgLite
-uint32_t MsgLite::CRC32B(uint32_t crc, const uint8_t* raw_buf, size_t size)
-{
-    return crc32b(crc, ReadonlySlice(raw_buf, size));
 }
 
 static int8_t bytes_of_type(uint8_t type_byte)
@@ -892,7 +887,7 @@ bool Unpacker::put(uint8_t byte)
                     }
                 }
             }
-            crc_body = CRC32B(crc_body, &byte, 1);
+            crc_body = crc32b(crc_body, ReadonlySlice(&byte, 1));
             buf[len++] = byte;
         }
     }
@@ -920,4 +915,10 @@ bool Unpacker::put(uint8_t byte)
 const Message& Unpacker::get(void)
 {
     return msg;
+}
+
+// Exposed checksum function used by MsgLite
+uint32_t MsgLite::CRC32B(uint32_t crc, const uint8_t* raw_buf, size_t size)
+{
+    return crc32b(crc, ReadonlySlice(raw_buf, size));
 }
