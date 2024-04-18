@@ -1,6 +1,6 @@
 #include "msglite.h"
 
-#include <cstddef>
+#include <cassert>
 #include <cstring>
 #include <limits>
 
@@ -10,8 +10,75 @@ static_assert(sizeof(double) == 8, "double must be 64 bits");
 static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 float required");
 static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 double required");
 
+#ifdef MSGLITE_BOUND_CHECKING
+#define Assert(x, msg) assert((x) && msg)
+#else
+#define Assert(x, msg)
+#endif
+
+namespace {
+    // Byte array with (conditional) bound checking
+    class Slice {
+    public:
+        uint8_t* ptr;
+        const uint8_t len;
+
+        Slice(uint8_t* ptr, uint8_t len)
+            : ptr(ptr), len(len) {};
+
+        uint8_t& operator[](uint8_t idx)
+        {
+            Assert(idx < len, "Slice out of bound");
+            return ptr[idx];
+        }
+
+        Slice slice(uint8_t start)
+        {
+            Assert(start <= len, "Slice out of bound");
+            return Slice(ptr + start, len - start);
+        }
+
+        Slice slice(uint8_t start, uint8_t len)
+        {
+            Assert((uint16_t)start + (uint16_t)len <= this->len, "Slice out of bound");
+            return Slice(ptr + start, len);
+        }
+    };
+
+    // Readonly Byte array with (conditional) bound checking
+    class ReadonlySlice {
+    public:
+        const uint8_t* ptr;
+        const uint8_t len;
+
+        ReadonlySlice(const uint8_t* ptr, uint8_t len)
+            : ptr(ptr), len(len) {};
+
+        ReadonlySlice(Slice s)
+            : ptr(s.ptr), len(s.len) {};
+
+        const uint8_t& operator[](uint8_t idx)
+        {
+            Assert(idx < len, "Slice out of bound");
+            return ptr[idx];
+        }
+
+        ReadonlySlice slice(uint8_t start)
+        {
+            Assert(start <= len, "Slice out of bound");
+            return ReadonlySlice(ptr + start, len - start);
+        }
+
+        ReadonlySlice slice(uint8_t start, uint8_t len)
+        {
+            Assert((uint16_t)start + (uint16_t)len <= this->len, "Slice out of bound");
+            return ReadonlySlice(ptr + start, len);
+        }
+    };
+}
+
 template <typename T>
-static void to_1_bytes(T y, uint8_t* x)
+static void to_1_bytes(T y, Slice x)
 {
     static_assert(sizeof(T) == 1, "Data type size must be 1 bytes");
     union {
@@ -23,7 +90,7 @@ static void to_1_bytes(T y, uint8_t* x)
 }
 
 template <typename T>
-static void to_2_bytes(T y, uint8_t* x)
+static void to_2_bytes(T y, Slice x)
 {
     static_assert(sizeof(T) == 2, "Data type size must be 2 bytes");
     union {
@@ -36,7 +103,7 @@ static void to_2_bytes(T y, uint8_t* x)
 }
 
 template <typename T>
-static void to_4_bytes(T y, uint8_t* x)
+static void to_4_bytes(T y, Slice x)
 {
     static_assert(sizeof(T) == 4, "Data type size must be 4 bytes");
     union {
@@ -51,7 +118,7 @@ static void to_4_bytes(T y, uint8_t* x)
 }
 
 template <typename T>
-static void to_8_bytes(T y, uint8_t* x)
+static void to_8_bytes(T y, Slice x)
 {
     static_assert(sizeof(T) == 8, "Data type size must be 8 bytes");
     union {
@@ -70,7 +137,7 @@ static void to_8_bytes(T y, uint8_t* x)
 }
 
 template <typename T>
-static void from_1_bytes(T& y, const uint8_t* x)
+static void from_1_bytes(T& y, ReadonlySlice x)
 {
     static_assert(sizeof(T) == 1, "Data type size must be 1 bytes");
     union {
@@ -82,7 +149,7 @@ static void from_1_bytes(T& y, const uint8_t* x)
 }
 
 template <typename T>
-static void from_2_bytes(T& y, const uint8_t* x)
+static void from_2_bytes(T& y, ReadonlySlice x)
 {
     static_assert(sizeof(T) == 2, "Data type size must be 2 bytes");
     union {
@@ -94,7 +161,7 @@ static void from_2_bytes(T& y, const uint8_t* x)
 }
 
 template <typename T>
-static void from_4_bytes(T& y, const uint8_t* x)
+static void from_4_bytes(T& y, ReadonlySlice x)
 {
     static_assert(sizeof(T) == 4, "Data type size must be 4 bytes");
     union {
@@ -106,7 +173,7 @@ static void from_4_bytes(T& y, const uint8_t* x)
 }
 
 template <typename T>
-static void from_8_bytes(T& y, const uint8_t* x)
+static void from_8_bytes(T& y, ReadonlySlice x)
 {
     static_assert(sizeof(T) == 8, "Data type size must be 8 bytes");
     union {
@@ -129,7 +196,7 @@ static size_t custom_strnlen(const char* str, size_t n)
 
 // CRC32 code derived from work by Gary S. Brown.
 // https://opensource.apple.com/source/xnu/xnu-1456.1.26/bsd/libkern/crc32.c
-static const uint32_t crc32_table[] = {
+static const uint32_t crc32_table[256] = {
     0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
     0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
     0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2,
@@ -177,12 +244,18 @@ static const uint32_t crc32_table[] = {
 
 // CRC32 code derived from work by Gary S. Brown.
 // https://opensource.apple.com/source/xnu/xnu-1456.1.26/bsd/libkern/crc32.c
-uint32_t MsgLite::CRC32B(uint32_t crc, const uint8_t* buf, size_t size)
+static uint32_t crc32b(uint32_t crc, ReadonlySlice buf)
 {
     crc = crc ^ ~0U;
-    while (size--)
-        crc = crc32_table[(crc ^ *buf++) & 0xFF] ^ (crc >> 8);
+    for (int ii = 0; ii < buf.len; ++ii)
+        crc = crc32_table[(crc ^ buf[ii]) & 0xFF] ^ (crc >> 8);
     return crc ^ ~0U;
+}
+
+// Exposed checksum function used by MsgLite
+uint32_t MsgLite::CRC32B(uint32_t crc, const uint8_t* raw_buf, size_t size)
+{
+    return crc32b(crc, ReadonlySlice(raw_buf, size));
 }
 
 static int8_t bytes_of_type(uint8_t type_byte)
@@ -343,7 +416,7 @@ int8_t Object::size() const
         case Double:
             return 9;
         case String: {
-            int len = custom_strnlen(as.String, 16);
+            int len = custom_strnlen(as.String, sizeof(as.String));
             if (len > 15)
                 return -1; // Error: string too long
             return 1 + len;
@@ -372,10 +445,12 @@ int16_t Message::size() const
 // Serializes message and writes bytes to a byte array.
 //
 // Returns length of data if serialization is successful, -1 if fails.
-int16_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
+int16_t MsgLite::Pack(const Message& msg, uint8_t* raw_buf, uint8_t len)
 {
+    Slice buf = Slice(raw_buf, len);
+
     int16_t msg_size = msg.size();
-    if (msg_size < 0 || msg_size > len)
+    if (msg_size < 0 || msg_size > buf.len)
         return -1; // Error: invalid message or buffer size is insufficient
 
     uint8_t pos = 0;
@@ -410,81 +485,82 @@ int16_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
 
             case Object::Uint8: {
                 buf[pos++] = 0xCC;
-                to_1_bytes(msg.obj[ii].as.Uint8, &buf[pos]);
+                to_1_bytes(msg.obj[ii].as.Uint8, buf.slice(pos, 1));
                 pos += 1;
                 break;
             }
 
             case Object::Uint16: {
                 buf[pos++] = 0xCD;
-                to_2_bytes(msg.obj[ii].as.Uint16, &buf[pos]);
+                to_2_bytes(msg.obj[ii].as.Uint16, buf.slice(pos, 2));
                 pos += 2;
                 break;
             }
 
             case Object::Uint32: {
                 buf[pos++] = 0xCE;
-                to_4_bytes(msg.obj[ii].as.Uint32, &buf[pos]);
+                to_4_bytes(msg.obj[ii].as.Uint32, buf.slice(pos, 4));
                 pos += 4;
                 break;
             }
 
             case Object::Uint64: {
                 buf[pos++] = 0xCF;
-                to_8_bytes(msg.obj[ii].as.Uint64, &buf[pos]);
+                to_8_bytes(msg.obj[ii].as.Uint64, buf.slice(pos, 8));
                 pos += 8;
                 break;
             }
 
             case Object::Int8: {
                 buf[pos++] = 0xD0;
-                to_1_bytes(msg.obj[ii].as.Int8, &buf[pos]);
+                to_1_bytes(msg.obj[ii].as.Int8, buf.slice(pos, 1));
                 pos += 1;
                 break;
             }
 
             case Object::Int16: {
                 buf[pos++] = 0xD1;
-                to_2_bytes(msg.obj[ii].as.Int16, &buf[pos]);
+                to_2_bytes(msg.obj[ii].as.Int16, buf.slice(pos, 2));
                 pos += 2;
                 break;
             }
 
             case Object::Int32: {
                 buf[pos++] = 0xD2;
-                to_4_bytes(msg.obj[ii].as.Int32, &buf[pos]);
+                to_4_bytes(msg.obj[ii].as.Int32, buf.slice(pos, 4));
                 pos += 4;
                 break;
             }
 
             case Object::Int64: {
                 buf[pos++] = 0xD3;
-                to_8_bytes(msg.obj[ii].as.Int64, &buf[pos]);
+                to_8_bytes(msg.obj[ii].as.Int64, buf.slice(pos, 8));
                 pos += 8;
                 break;
             }
 
             case Object::Float: {
                 buf[pos++] = 0xCA;
-                to_4_bytes(msg.obj[ii].as.Float, &buf[pos]);
+                to_4_bytes(msg.obj[ii].as.Float, buf.slice(pos, 4));
                 pos += 4;
                 break;
             }
 
             case Object::Double: {
                 buf[pos++] = 0xCB;
-                to_8_bytes(msg.obj[ii].as.Double, &buf[pos]);
+                to_8_bytes(msg.obj[ii].as.Double, buf.slice(pos, 8));
                 pos += 8;
                 break;
             }
 
             case Object::String: {
-                int len = custom_strnlen(msg.obj[ii].as.String, 16);
-                if (len > 15)
+                int str_len = custom_strnlen(msg.obj[ii].as.String, sizeof(msg.obj[ii].as.String));
+                if (str_len > 15)
                     return -1; // Error: String too long
-                buf[pos++] = 0xA0 + len;
-                memcpy(buf + pos, msg.obj[ii].as.String, len); // Memory areas not overlap: yes
-                pos += len;
+                buf[pos++] = 0xA0 + str_len;
+                for (int jj = 0; jj < str_len; ++jj)
+                    buf[pos + jj] = msg.obj[ii].as.String[jj];
+                pos += str_len;
                 break;
             }
 
@@ -496,8 +572,8 @@ int16_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
 
     // Checksum (CRC32)
     {
-        uint32_t crc = CRC32B(0, buf + 6, pos - 6);
-        to_4_bytes(crc, buf + 2);
+        uint32_t crc = crc32b(0, buf.slice(6, pos - 6));
+        to_4_bytes(crc, buf.slice(2, 4));
     }
 
     if (pos != msg_size)
@@ -523,12 +599,12 @@ enum unpack_ll_status {
     unpack_ll_corrupted,
     unpack_ll_too_many_bytes
 };
-static unpack_ll_status unpack_ll_body(const uint8_t* buf, uint8_t len, Message& msg)
+static unpack_ll_status unpack_ll_body(ReadonlySlice buf, Message& msg)
 {
-    if (len < MIN_MSG_LEN)
+    if (buf.len < MIN_MSG_LEN)
         return unpack_ll_need_more_bytes;
 
-    if (len > MAX_MSG_LEN)
+    if (buf.len > MAX_MSG_LEN)
         return unpack_ll_too_many_bytes;
 
     // Skip verifying the header and checksum (6 bytes).
@@ -541,7 +617,7 @@ static unpack_ll_status unpack_ll_body(const uint8_t* buf, uint8_t len, Message&
 
     // Message body
     for (int ii = 0; ii < msg.len; ii++) {
-        if (pos + 1 > len)
+        if (pos + 1 > buf.len)
             return unpack_ll_need_more_bytes;
         uint8_t type_byte = buf[pos++];
 
@@ -560,91 +636,91 @@ static unpack_ll_status unpack_ll_body(const uint8_t* buf, uint8_t len, Message&
             }
             // Uint8
             case 0xCC: {
-                if (pos + 1 > len)
+                if (pos + 1 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Uint8;
-                from_1_bytes(msg.obj[ii].as.Uint8, buf + pos);
+                from_1_bytes(msg.obj[ii].as.Uint8, buf.slice(pos, 1));
                 pos += 1;
                 break;
             }
             // Uint16
             case 0xCD: {
-                if (pos + 2 > len)
+                if (pos + 2 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Uint16;
-                from_2_bytes(msg.obj[ii].as.Uint16, buf + pos);
+                from_2_bytes(msg.obj[ii].as.Uint16, buf.slice(pos, 2));
                 pos += 2;
                 break;
             }
             // Uint32
             case 0xCE: {
-                if (pos + 4 > len)
+                if (pos + 4 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Uint32;
-                from_4_bytes(msg.obj[ii].as.Uint32, buf + pos);
+                from_4_bytes(msg.obj[ii].as.Uint32, buf.slice(pos, 4));
                 pos += 4;
                 break;
             }
             // Uint64
             case 0xCF: {
-                if (pos + 8 > len)
+                if (pos + 8 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Uint64;
-                from_8_bytes(msg.obj[ii].as.Uint64, buf + pos);
+                from_8_bytes(msg.obj[ii].as.Uint64, buf.slice(pos, 8));
                 pos += 8;
                 break;
             }
             // Int8
             case 0xD0: {
-                if (pos + 1 > len)
+                if (pos + 1 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Int8;
-                from_1_bytes(msg.obj[ii].as.Int8, buf + pos);
+                from_1_bytes(msg.obj[ii].as.Int8, buf.slice(pos, 1));
                 pos += 1;
                 break;
             }
             // Int16
             case 0xD1: {
-                if (pos + 2 > len)
+                if (pos + 2 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Int16;
-                from_2_bytes(msg.obj[ii].as.Int16, buf + pos);
+                from_2_bytes(msg.obj[ii].as.Int16, buf.slice(pos, 2));
                 pos += 2;
                 break;
             }
             // Int32
             case 0xD2: {
-                if (pos + 4 > len)
+                if (pos + 4 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Int32;
-                from_4_bytes(msg.obj[ii].as.Int32, buf + pos);
+                from_4_bytes(msg.obj[ii].as.Int32, buf.slice(pos, 4));
                 pos += 4;
                 break;
             }
             // Int64
             case 0xD3: {
-                if (pos + 8 > len)
+                if (pos + 8 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Int64;
-                from_8_bytes(msg.obj[ii].as.Int64, buf + pos);
+                from_8_bytes(msg.obj[ii].as.Int64, buf.slice(pos, 8));
                 pos += 8;
                 break;
             }
             // Float
             case 0xCA: {
-                if (pos + 4 > len)
+                if (pos + 4 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Float;
-                from_4_bytes(msg.obj[ii].as.Float, buf + pos);
+                from_4_bytes(msg.obj[ii].as.Float, buf.slice(pos, 4));
                 pos += 4;
                 break;
             }
             // Double
             case 0xCB: {
-                if (pos + 8 > len)
+                if (pos + 8 > buf.len)
                     return unpack_ll_need_more_bytes;
                 msg.obj[ii].type = Object::Double;
-                from_8_bytes(msg.obj[ii].as.Double, buf + pos);
+                from_8_bytes(msg.obj[ii].as.Double, buf.slice(pos, 8));
                 pos += 8;
                 break;
             }
@@ -652,10 +728,12 @@ static unpack_ll_status unpack_ll_body(const uint8_t* buf, uint8_t len, Message&
             default: {
                 if (0xA0 <= type_byte && type_byte <= 0xAF) {
                     int str_len = type_byte - 0xA0;
-                    if (pos + str_len > len)
+                    if (pos + str_len > buf.len)
                         return unpack_ll_need_more_bytes;
                     msg.obj[ii].type = Object::String;
-                    memcpy(msg.obj[ii].as.String, buf + pos, str_len); // Memory areas not overlap: yes
+                    for (int jj = 0; jj < str_len; ++jj) {
+                        msg.obj[ii].as.String[jj] = buf[pos + jj];
+                    }
                     msg.obj[ii].as.String[str_len] = '\0';
                     pos += str_len;
                     break;
@@ -666,15 +744,17 @@ static unpack_ll_status unpack_ll_body(const uint8_t* buf, uint8_t len, Message&
             }
         }
     }
-    return pos == len ? unpack_ll_success : unpack_ll_too_many_bytes;
+    return pos == buf.len ? unpack_ll_success : unpack_ll_too_many_bytes;
 }
 
 // Deserializes data from a byte array.
 //
 // Returns true if successful, false if unpacking fails.
-bool MsgLite::Unpack(const uint8_t* buf, uint8_t len, Message& msg)
+bool MsgLite::Unpack(const uint8_t* raw_buf, uint8_t len, Message& msg)
 {
-    if (len < MIN_MSG_LEN || len > MAX_MSG_LEN)
+    ReadonlySlice buf = ReadonlySlice(raw_buf, len);
+
+    if (buf.len < MIN_MSG_LEN || buf.len > MAX_MSG_LEN)
         return false;
 
     // Header
@@ -685,13 +765,13 @@ bool MsgLite::Unpack(const uint8_t* buf, uint8_t len, Message& msg)
     if (buf[1] != 0xCE)
         return false;
     uint32_t crc_header, crc_body;
-    from_4_bytes(crc_header, buf + 2);
-    crc_body = CRC32B(0, buf + 6, len - 6);
+    from_4_bytes(crc_header, buf.slice(2, 4));
+    crc_body = crc32b(0, buf.slice(6));
     if (crc_body != crc_header)
         return false;
 
     // Body
-    return unpack_ll_body(buf, len, msg) == unpack_ll_success;
+    return unpack_ll_body(buf, msg) == unpack_ll_success;
 }
 
 // Deserializes data from a buffer.
@@ -713,7 +793,7 @@ Packer::Packer(void)
 // 1. Call put() to serialize a message. Returns true if successful.
 bool Packer::put(const Message& msg)
 {
-    len = Pack(msg, buf, sizeof(buf));
+    len = Pack(msg, raw_buf, sizeof(raw_buf));
     if (len == 0) {
         // Ensure pos > len, which makes get() returns -1.
         pos = MAX_MSG_LEN + 1;
@@ -726,6 +806,8 @@ bool Packer::put(const Message& msg)
 // 2. Call get() repeatedly to get bytes. Returns -1 to indicate the end.
 int Packer::get()
 {
+    ReadonlySlice buf(raw_buf, sizeof(raw_buf));
+
     if (pos < len)
         return buf[pos++];
     else
@@ -746,6 +828,8 @@ Unpacker::Unpacker(void)
 // retrieve the message.
 bool Unpacker::put(uint8_t byte)
 {
+    Slice buf(raw_buf, sizeof(raw_buf));
+
     if (len >= MAX_MSG_LEN)
         len = 0; // Failed, reset the unpacker
 
@@ -820,7 +904,7 @@ bool Unpacker::put(uint8_t byte)
         return false; // Checksum mismatch
     }
 
-    unpack_ll_status status = unpack_ll_body(buf, len, msg);
+    unpack_ll_status status = unpack_ll_body(buf.slice(0, len), msg);
     len = 0; // Whether successful or not, we need to reset the unpack.
     return status == unpack_ll_success;
 }
