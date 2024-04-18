@@ -371,12 +371,12 @@ int16_t Message::size() const
 
 // Serializes message and writes bytes to a byte array.
 //
-// Returns length of data if serialization is successful, 0 if fails.
-uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
+// Returns length of data if serialization is successful, -1 if fails.
+int16_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
 {
     int16_t msg_size = msg.size();
     if (msg_size < 0 || msg_size > len)
-        return 0; // Error: invalid message or buffer size is insufficient
+        return -1; // Error: invalid message or buffer size is insufficient
 
     uint8_t pos = 0;
 
@@ -402,7 +402,7 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
                 // Use the 'volatile' keyword to enforce a check here.
                 volatile uint8_t bool_in_byte = msg.obj[ii].as.String[0];
                 if (bool_in_byte != 0 && bool_in_byte != 1)
-                    return 0;
+                    return -1;
 
                 buf[pos++] = 0xC2 + msg.obj[ii].as.Bool;
                 break;
@@ -481,7 +481,7 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
             case Object::String: {
                 int len = custom_strnlen(msg.obj[ii].as.String, 16);
                 if (len > 15)
-                    return 0; // Error: String too long
+                    return -1; // Error: String too long
                 buf[pos++] = 0xA0 + len;
                 memcpy(buf + pos, msg.obj[ii].as.String, len); // Memory areas not overlap: yes
                 pos += len;
@@ -489,7 +489,7 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
             }
 
             default: {
-                return 0; // Error: Unknown type
+                return -1; // Error: Unknown type
             }
         }
     }
@@ -501,7 +501,7 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
     }
 
     if (pos != msg_size)
-        return 0; // Error: this should never happen
+        return -1; // Error: this should never happen
     return pos;
 }
 

@@ -90,8 +90,8 @@ namespace MsgLite {
 
     // Serializes message and writes bytes to a byte array.
     //
-    // Returns length of data if serialization is successful, 0 if fails.
-    uint8_t Pack(const Message& msg, uint8_t* buf, uint8_t len);
+    // Returns length of data if serialization is successful, -1 if fails.
+    int16_t Pack(const Message& msg, uint8_t* buf, uint8_t len);
 
     // Serializes message and writes bytes to a buffer.
     //
