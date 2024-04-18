@@ -90,10 +90,8 @@ namespace MsgLite {
 
     // Serializes message and writes bytes to a byte array.
     //
-    // The byte array must be at least MAX_MSG_LEN (247 bytes)!
-    //
     // Returns length of data if serialization is successful, 0 if fails.
-    uint8_t Pack(const Message& msg, uint8_t* buf);
+    uint8_t Pack(const Message& msg, uint8_t* buf, uint8_t len);
 
     // Serializes message and writes bytes to a buffer.
     //

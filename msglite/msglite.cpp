@@ -371,13 +371,12 @@ int16_t Message::size() const
 
 // Serializes message and writes bytes to a byte array.
 //
-// The byte array must be at least MAX_MSG_LEN (247 bytes)!
-//
 // Returns length of data if serialization is successful, 0 if fails.
-uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf)
+uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf, uint8_t len)
 {
-    if (msg.len > 15)
-        return 0; // Error: message too long
+    int16_t msg_size = msg.size();
+    if (msg_size < 0 || msg_size > len)
+        return 0; // Error: invalid message or buffer size is insufficient
 
     uint8_t pos = 0;
 
@@ -501,6 +500,8 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf)
         to_4_bytes(crc, buf + 2);
     }
 
+    if (pos != msg_size)
+        return 0; // Error: this should never happen
     return pos;
 }
 
@@ -509,7 +510,7 @@ uint8_t MsgLite::Pack(const Message& msg, uint8_t* buf)
 // Returns true if successful, false if packing fails.
 bool MsgLite::Pack(const Message& msg, Buffer& buf)
 {
-    buf.len = Pack(msg, buf.data);
+    buf.len = Pack(msg, buf.data, sizeof(buf.data));
     return buf.len > 0;
 }
 
@@ -712,7 +713,7 @@ Packer::Packer(void)
 // 1. Call put() to serialize a message. Returns true if successful.
 bool Packer::put(const Message& msg)
 {
-    len = Pack(msg, buf);
+    len = Pack(msg, buf, sizeof(buf));
     if (len == 0) {
         // Ensure pos > len, which makes get() returns -1.
         pos = MAX_MSG_LEN + 1;
