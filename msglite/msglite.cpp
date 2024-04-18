@@ -316,6 +316,59 @@ Object::Object(const char* x)
     this->as.String[15] = '\0';
 }
 
+// Returns byte size after serialization, -1 if invalid type.
+int8_t Object::size() const
+{
+    switch (type) {
+        case Bool:
+            return 1;
+        case Uint8:
+            return 2;
+        case Uint16:
+            return 3;
+        case Uint32:
+            return 5;
+        case Uint64:
+            return 9;
+        case Int8:
+            return 2;
+        case Int16:
+            return 3;
+        case Int32:
+            return 5;
+        case Int64:
+            return 9;
+        case Float:
+            return 5;
+        case Double:
+            return 9;
+        case String: {
+            int len = custom_strnlen(as.String, 16);
+            if (len > 15)
+                return -1; // Error: string too long
+            return 1 + len;
+        }
+        default:
+            return -1; // Error: invalid type
+    }
+}
+
+// Returns byte size after serialization, -1 if invalid message.
+int16_t Message::size() const
+{
+    int16_t total_size = 7;
+    if (len > 15)
+        return -1; // Error: message too long
+    for (uint8_t ii = 0; ii < len; ++ii) {
+        int8_t obj_size = obj[ii].size();
+        if (obj_size == -1) {
+            return -1; // Error: invalid object size
+        }
+        total_size += obj_size;
+    }
+    return total_size;
+}
+
 // Serializes message and writes bytes to a byte array.
 //
 // The byte array must be at least MAX_MSG_LEN (247 bytes)!

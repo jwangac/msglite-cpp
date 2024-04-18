@@ -50,6 +50,9 @@ namespace MsgLite {
         Object(float x);
         Object(double x);
         Object(const char* x);
+
+        // Returns byte size after serialization, -1 if invalid type.
+        int8_t size() const;
     };
 
     struct Message {
@@ -71,6 +74,9 @@ namespace MsgLite {
                 obj[ii] = tmp[ii];
             }
         }
+
+        // Returns byte size after serialization, -1 if invalid message.
+        int16_t size() const;
     };
 
     const int MIN_MSG_LEN = (1 + (1 + 4) + (1 + 0));             // = 7
