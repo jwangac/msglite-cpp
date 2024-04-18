@@ -49,7 +49,7 @@ namespace MsgLite {
         Object(int64_t x);
         Object(float x);
         Object(double x);
-        Object(const char* x);
+        Object(const char* x); // String will be trimmed to a maximum of 15 bytes.
 
         // Returns byte size after serialization, -1 if invalid type.
         int8_t size() const;
