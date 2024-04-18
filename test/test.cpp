@@ -109,6 +109,9 @@ int main(void)
     }
 
     if (true) {
+        MsgLite::Message msg_empty;
+        assert(msg_empty.size() == MsgLite::MIN_MSG_LEN);
+
         MsgLite::Message largest("helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello");
         MsgLite::Buffer buf;
         assert(MsgLite::Pack(largest, buf));
@@ -121,6 +124,27 @@ int main(void)
         MsgLite::Message broken(false);
         broken.obj[0].as.Uint8 = 2;
         assert(!MsgLite::Pack(broken, buf));
+    }
+
+    if (true) {
+        MsgLite::Object obj_bool(true);
+        assert(obj_bool.type == MsgLite::Object::Bool);
+        assert(obj_bool.as.Bool == true);
+
+        MsgLite::Object obj_uint8((uint8_t)255);
+        assert(obj_uint8.type == MsgLite::Object::Uint8);
+        assert(obj_uint8.as.Uint8 == 255);
+
+        MsgLite::Object obj_int8((int8_t)-128);
+        assert(obj_int8.type == MsgLite::Object::Int8);
+        assert(obj_int8.as.Int8 == -128);
+    }
+
+    if (true) {
+        MsgLite::Message invalid_msg;
+        invalid_msg.len = 1;
+        MsgLite::Buffer buf;
+        assert(!MsgLite::Pack(invalid_msg, buf)); // Should fail to pack
     }
 
     if (true) {
