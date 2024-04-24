@@ -129,6 +129,31 @@ int main(void)
         assert(packer.get() == -1);
     }
 
+    // test stream unpacker with empty and largest messages
+    if (true) {
+        MsgLite::Buffer buf;
+
+        MsgLite::Message empty;
+        MsgLite::Pack(empty, buf);
+        for (int ii = 0; ii < buf.len; ++ii) {
+            if (unpacker.put(buf.data[ii])) {
+                assert(ii == buf.len - 1);
+                break;
+            }
+            assert(ii < buf.len - 1);
+        }
+
+        MsgLite::Message largest("helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello", "helloworldhello");
+        MsgLite::Pack(largest, buf);
+        for (int ii = 0; ii < buf.len; ++ii) {
+            if (unpacker.put(buf.data[ii])) {
+                assert(ii == buf.len - 1);
+                break;
+            }
+            assert(ii < buf.len - 1);
+        }
+    }
+
     // test stream unpacker with valid data
     if (true) {
         FILE* fd = fopen("./test/data_static.bin", "rb");
