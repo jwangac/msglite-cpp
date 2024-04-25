@@ -405,10 +405,46 @@ void test_checksum()
     assert(MsgLite::CRC32B(0, x, 9) == 0xCBF43926);
 }
 
+void test_parse()
+{
+    char s[16] = "world";
+    uint8_t x = 0xFF;
+    double y = Inf;
+
+    MsgLite::Message msg("hello", "from", "apple");
+    assert(!msg.parse("world"));
+    assert(!msg.parse("hello"));
+    assert(!msg.parse("hello", "from"));
+    assert(!msg.parse("hello", "from", "who"));
+    assert(!msg.parse("hello", "from", "world"));
+    assert(!msg.parse("hello", "from", x));
+    assert(!msg.parse("hello", "from", y));
+    assert(!msg.parse(x, y));
+    assert(msg.parse("hello", "from", "apple"));
+    assert(msg.parse("hello", "from", s));
+    assert(strcmp(s, "apple") == 0);
+
+    MsgLite::Message msg2((uint8_t)1, 2.0);
+    assert(!msg2.parse("hello"));
+    assert(msg2.parse(x, y));
+    assert(x == 1 && y == 2.0);
+
+    MsgLite::Message msg3("hello", (uint8_t)3, 4.0);
+    assert(!msg3.parse(x, y));
+    assert(!msg3.parse("world", x, y));
+    assert(msg3.parse("hello", x, y));
+    assert(x == 3 && y == 4.0);
+
+    const uint8_t magic = 0xAB;
+    assert(!MsgLite::Message((uint8_t)0x00).parse(magic));
+    assert(MsgLite::Message((uint8_t)0xAB).parse(magic));
+}
+
 void pedantic_checks()
 {
     test_object_constructors();
     test_object_size();
     test_object_serialization();
     test_checksum();
+    test_parse();
 }
