@@ -451,7 +451,7 @@ bool MsgLite::operator==(const Object& lhs, const Object& rhs)
     }
 
     if (lhs_size > 0)
-        return memcmp(lhs.as.String, rhs.as.String, lhs_size - 1);
+        return memcmp(lhs.as.String, rhs.as.String, lhs_size - 1) == 0;
     else
         return false; // this should never happen
 }
