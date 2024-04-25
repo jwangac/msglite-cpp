@@ -457,7 +457,7 @@ bool MsgLite::operator==(const Object& lhs, const Object& rhs)
 }
 
 // Converting functions that return true if types match.
-bool Object::cast_to(bool& x)
+bool Object::cast_to(bool& x) const
 {
     if (type == Bool) {
         if (broken_bool(*this))
@@ -467,7 +467,7 @@ bool Object::cast_to(bool& x)
     }
     return false;
 }
-bool Object::cast_to(uint8_t& x)
+bool Object::cast_to(uint8_t& x) const
 {
     if (type == Uint8) {
         x = as.Uint8;
@@ -475,7 +475,7 @@ bool Object::cast_to(uint8_t& x)
     }
     return false;
 }
-bool Object::cast_to(uint16_t& x)
+bool Object::cast_to(uint16_t& x) const
 {
     if (type == Uint16) {
         x = as.Uint16;
@@ -483,7 +483,7 @@ bool Object::cast_to(uint16_t& x)
     }
     return false;
 }
-bool Object::cast_to(uint32_t& x)
+bool Object::cast_to(uint32_t& x) const
 {
     if (type == Uint32) {
         x = as.Uint32;
@@ -491,7 +491,7 @@ bool Object::cast_to(uint32_t& x)
     }
     return false;
 }
-bool Object::cast_to(uint64_t& x)
+bool Object::cast_to(uint64_t& x) const
 {
     if (type == Uint64) {
         x = as.Uint64;
@@ -499,7 +499,7 @@ bool Object::cast_to(uint64_t& x)
     }
     return false;
 }
-bool Object::cast_to(int8_t& x)
+bool Object::cast_to(int8_t& x) const
 {
     if (type == Int8) {
         x = as.Int8;
@@ -507,7 +507,7 @@ bool Object::cast_to(int8_t& x)
     }
     return false;
 }
-bool Object::cast_to(int16_t& x)
+bool Object::cast_to(int16_t& x) const
 {
     if (type == Int16) {
         x = as.Int16;
@@ -515,7 +515,7 @@ bool Object::cast_to(int16_t& x)
     }
     return false;
 }
-bool Object::cast_to(int32_t& x)
+bool Object::cast_to(int32_t& x) const
 {
     if (type == Int32) {
         x = as.Int32;
@@ -524,7 +524,7 @@ bool Object::cast_to(int32_t& x)
     return false;
 }
 
-bool Object::cast_to(int64_t& x)
+bool Object::cast_to(int64_t& x) const
 {
     if (type == Int64) {
         x = as.Int64;
@@ -532,7 +532,7 @@ bool Object::cast_to(int64_t& x)
     }
     return false;
 }
-bool Object::cast_to(float& x)
+bool Object::cast_to(float& x) const
 {
     if (type == Float) {
         x = as.Float;
@@ -540,7 +540,7 @@ bool Object::cast_to(float& x)
     }
     return false;
 }
-bool Object::cast_to(double& x)
+bool Object::cast_to(double& x) const
 {
     if (type == Double) {
         x = as.Double;
@@ -548,7 +548,7 @@ bool Object::cast_to(double& x)
     }
     return false;
 }
-bool Object::cast_to(char* x)
+bool Object::cast_to(char* x) const
 {
     if (type == String) {
         int len = custom_strnlen(as.String, 16);
@@ -563,62 +563,62 @@ bool Object::cast_to(char* x)
 }
 
 // Dummy converting functions that do nothing and return false.
-bool Object::cast_to(const bool& x)
+bool Object::cast_to(const bool& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const uint8_t& x)
+bool Object::cast_to(const uint8_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const uint16_t& x)
+bool Object::cast_to(const uint16_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const uint32_t& x)
+bool Object::cast_to(const uint32_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const uint64_t& x)
+bool Object::cast_to(const uint64_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const int8_t& x)
+bool Object::cast_to(const int8_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const int16_t& x)
+bool Object::cast_to(const int16_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const int32_t& x)
+bool Object::cast_to(const int32_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const int64_t& x)
+bool Object::cast_to(const int64_t& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const float& x)
+bool Object::cast_to(const float& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const double& x)
+bool Object::cast_to(const double& x) const
 {
     (void)x;
     return false;
 }
-bool Object::cast_to(const char* x)
+bool Object::cast_to(const char* x) const
 {
     (void)x;
     return false;

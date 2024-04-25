@@ -62,32 +62,32 @@ namespace MsgLite {
         friend bool operator==(const Object& lhs, const Object& rhs);
 
         // Converting functions that return true if types match.
-        bool cast_to(bool& x);
-        bool cast_to(uint8_t& x);
-        bool cast_to(uint16_t& x);
-        bool cast_to(uint32_t& x);
-        bool cast_to(uint64_t& x);
-        bool cast_to(int8_t& x);
-        bool cast_to(int16_t& x);
-        bool cast_to(int32_t& x);
-        bool cast_to(int64_t& x);
-        bool cast_to(float& x);
-        bool cast_to(double& x);
-        bool cast_to(char* x); // Assumes sizeof(x) >= 16
+        bool cast_to(bool& x) const;
+        bool cast_to(uint8_t& x) const;
+        bool cast_to(uint16_t& x) const;
+        bool cast_to(uint32_t& x) const;
+        bool cast_to(uint64_t& x) const;
+        bool cast_to(int8_t& x) const;
+        bool cast_to(int16_t& x) const;
+        bool cast_to(int32_t& x) const;
+        bool cast_to(int64_t& x) const;
+        bool cast_to(float& x) const;
+        bool cast_to(double& x) const;
+        bool cast_to(char* x) const; // Assumes sizeof(x) >= 16
 
         // Dummy converting functions that do nothing and return false.
-        bool cast_to(const bool& x);
-        bool cast_to(const uint8_t& x);
-        bool cast_to(const uint16_t& x);
-        bool cast_to(const uint32_t& x);
-        bool cast_to(const uint64_t& x);
-        bool cast_to(const int8_t& x);
-        bool cast_to(const int16_t& x);
-        bool cast_to(const int32_t& x);
-        bool cast_to(const int64_t& x);
-        bool cast_to(const float& x);
-        bool cast_to(const double& x);
-        bool cast_to(const char* x);
+        bool cast_to(const bool& x) const;
+        bool cast_to(const uint8_t& x) const;
+        bool cast_to(const uint16_t& x) const;
+        bool cast_to(const uint32_t& x) const;
+        bool cast_to(const uint64_t& x) const;
+        bool cast_to(const int8_t& x) const;
+        bool cast_to(const int16_t& x) const;
+        bool cast_to(const int32_t& x) const;
+        bool cast_to(const int64_t& x) const;
+        bool cast_to(const float& x) const;
+        bool cast_to(const double& x) const;
+        bool cast_to(const char* x) const;
     };
 
     bool operator==(const Object& lhs, const Object& rhs);
@@ -117,12 +117,12 @@ namespace MsgLite {
 
     private:
         // Support functions for parse()
-        bool parse_from(uint8_t ii)
+        bool parse_from(uint8_t ii) const
         {
             return ii == len; // always true
         }
         template <typename Type, typename... Types>
-        bool parse_from(uint8_t ii, Type& first, Types&... others)
+        bool parse_from(uint8_t ii, Type& first, Types&... others) const
         {
             // Const input is used as filter.
             if (std::is_const<Type>::value) {
@@ -159,7 +159,7 @@ namespace MsgLite {
         // changed before a mismatch is detected. It is suggested to put const
         // filters at the start of arguments.
         template <typename... Types>
-        bool parse(Types&... args)
+        bool parse(Types&... args) const
         {
             if (len != sizeof...(args)) {
                 return false;
