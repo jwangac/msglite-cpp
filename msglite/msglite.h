@@ -74,7 +74,7 @@ namespace MsgLite {
         bool cast_to(double& x);
         bool cast_to(char* x); // Assumes sizeof(x) >= 16
 
-        // Dummy converting functions that do nothing and return true.
+        // Dummy converting functions that do nothing and return false.
         bool cast_to(const bool& x);
         bool cast_to(const uint8_t& x);
         bool cast_to(const uint16_t& x);

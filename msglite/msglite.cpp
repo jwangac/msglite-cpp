@@ -562,66 +562,66 @@ bool Object::cast_to(char* x)
     return false;
 }
 
-// Dummy converting functions that do nothing and return true.
+// Dummy converting functions that do nothing and return false.
 bool Object::cast_to(const bool& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const uint8_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const uint16_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const uint32_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const uint64_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const int8_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const int16_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const int32_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const int64_t& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const float& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const double& x)
 {
     (void)x;
-    return true;
+    return false;
 }
 bool Object::cast_to(const char* x)
 {
     (void)x;
-    return true;
+    return false;
 }
 
 // Returns byte size after serialization, -1 if invalid message.
