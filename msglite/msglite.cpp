@@ -16,6 +16,20 @@ static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 double required"
 #define Assert(x, msg)
 #endif
 
+// helper classes for bool checking
+//
+// An object marked as a bool type but having a value other than
+// 0 or 1 (mostly due to a mistake) can cause undefined behavior.
+bool broken_bool(const MsgLite::Object obj)
+{
+    if (obj.type != MsgLite::Object::Bool)
+        return false;
+
+    // Use the 'volatile' keyword to enforce a check here.
+    volatile uint8_t bool_in_byte = obj.as.String[0];
+    return bool_in_byte != 0 && bool_in_byte != 1;
+}
+
 // helper classes for bound checking
 namespace {
     // Byte array with (conditional) bound checking
@@ -431,17 +445,8 @@ bool MsgLite::operator==(const Object& lhs, const Object& rhs)
         return false;
 
     if (lhs.type == Object::Bool) {
-        // An object marked as a bool type but having a value other than
-        // 0/1 (mostly due to a mistake) can cause undefined behavior.
-        // Use the 'volatile' keyword to enforce a check here.
-        volatile uint8_t bool_in_byte;
-        bool_in_byte = lhs.as.String[0];
-        if (bool_in_byte != 0 && bool_in_byte != 1)
+        if (broken_bool(lhs) || broken_bool(rhs))
             return false;
-        bool_in_byte = rhs.as.String[0];
-        if (bool_in_byte != 0 && bool_in_byte != 1)
-            return false;
-
         return lhs.as.Bool == rhs.as.Bool;
     }
 
@@ -455,11 +460,7 @@ bool MsgLite::operator==(const Object& lhs, const Object& rhs)
 bool Object::cast_to(bool& x)
 {
     if (type == Bool) {
-        // An object marked as a bool type but having a value other than
-        // 0/1 (mostly due to a mistake) can cause undefined behavior.
-        // Use the 'volatile' keyword to enforce a check here.
-        volatile uint8_t bool_in_byte = as.String[0];
-        if (bool_in_byte != 0 && bool_in_byte != 1)
+        if (broken_bool(*this))
             return false;
         x = as.Bool;
         return true;
@@ -669,13 +670,8 @@ int16_t MsgLite::Pack(const Message& msg, uint8_t* raw_buf, uint8_t len)
     for (int ii = 0; ii < msg.len; ii++) {
         switch (msg.obj[ii].type) {
             case Object::Bool: {
-                // An object marked as a bool type but having a value other than
-                // 0/1 (mostly due to a mistake) can cause undefined behavior.
-                // Use the 'volatile' keyword to enforce a check here.
-                volatile uint8_t bool_in_byte = msg.obj[ii].as.String[0];
-                if (bool_in_byte != 0 && bool_in_byte != 1)
+                if (broken_bool(msg.obj[ii]))
                     return -1;
-
                 buf[pos++] = 0xC2 + msg.obj[ii].as.Bool;
                 break;
             }
