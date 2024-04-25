@@ -421,6 +421,36 @@ int8_t Object::size() const
     }
 }
 
+bool MsgLite::operator==(const Object& lhs, const Object& rhs)
+{
+    if (lhs.type != rhs.type)
+        return false;
+
+    int8_t lhs_size = lhs.size();
+    if (lhs_size < 0 || lhs_size != rhs.size())
+        return false;
+
+    if (lhs.type == Object::Bool) {
+        // An object marked as a bool type but having a value other than
+        // 0/1 (mostly due to a mistake) can cause undefined behavior.
+        // Use the 'volatile' keyword to enforce a check here.
+        volatile uint8_t bool_in_byte;
+        bool_in_byte = lhs.as.String[0];
+        if (bool_in_byte != 0 && bool_in_byte != 1)
+            return false;
+        bool_in_byte = rhs.as.String[0];
+        if (bool_in_byte != 0 && bool_in_byte != 1)
+            return false;
+
+        return lhs.as.Bool == rhs.as.Bool;
+    }
+
+    if (lhs_size > 0)
+        return memcmp(lhs.as.String, rhs.as.String, lhs_size - 1);
+    else
+        return false; // this should never happen
+}
+
 // Returns byte size after serialization, -1 if invalid message.
 int16_t Message::size() const
 {

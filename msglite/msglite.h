@@ -53,7 +53,15 @@ namespace MsgLite {
 
         // Returns byte size after serialization, -1 if invalid type.
         int8_t size() const;
+
+        // Checks if lhs and rhs are valid and equal (type and value).
+        // Ensures that after serialization, they are the same byte array.
+        //
+        // Remark: NaN != NaN but Object(NaN) == Object(NaN)
+        friend bool operator==(const Object& lhs, const Object& rhs);
     };
+
+    bool operator==(const Object& lhs, const Object& rhs);
 
     struct Message {
         uint8_t len;
