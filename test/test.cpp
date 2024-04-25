@@ -412,6 +412,7 @@ void test_parse()
     double y = Inf;
 
     MsgLite::Message msg("hello", "from", "apple");
+    assert(!msg.parse());
     assert(!msg.parse("world"));
     assert(!msg.parse("hello"));
     assert(!msg.parse("hello", "from"));
@@ -438,6 +439,9 @@ void test_parse()
     const uint8_t magic = 0xAB;
     assert(!MsgLite::Message((uint8_t)0x00).parse(magic));
     assert(MsgLite::Message((uint8_t)0xAB).parse(magic));
+
+    // empty message
+    assert(MsgLite::Message().parse());
 }
 
 void pedantic_checks()

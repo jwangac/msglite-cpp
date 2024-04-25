@@ -19,7 +19,7 @@ namespace MsgLite {
             Int64,   // Signed 64-bit integer
             Float,   // 32-bit floating point number
             Double,  // 64-bit floating point number
-            String   // Character array of up to 15 bytes (excluding '\0')
+            String   // Character array of up to 15 bytes (cannot hold '\0')
         } type;
 
         union {
@@ -55,8 +55,8 @@ namespace MsgLite {
         // Returns byte size after serialization, -1 if invalid type.
         int8_t size() const;
 
-        // Checks if lhs and rhs are valid and equal (type and value).
-        // Ensures that after serialization, they are the same byte array.
+        // Checks if they are both valid and have same type/value.
+        // This ensures that after serialization, they have the same byte array.
         //
         // Remark: NaN != NaN but Object(NaN) == Object(NaN)
         friend bool operator==(const Object& lhs, const Object& rhs);
@@ -76,6 +76,7 @@ namespace MsgLite {
         bool cast_to(char* x) const; // Assumes sizeof(x) >= 16
 
         // Dummy converting functions that do nothing and return false.
+        // They are required by Message::parse().
         bool cast_to(const bool& x) const;
         bool cast_to(const uint8_t& x) const;
         bool cast_to(const uint16_t& x) const;
@@ -97,7 +98,7 @@ namespace MsgLite {
         Object obj[15];
 
         // Constructors
-        Message()
+        Message(void)
         {
             len = 0;
         }
@@ -135,8 +136,7 @@ namespace MsgLite {
             bool ok = obj[ii].cast_to(first);
             if (ok)
                 return parse_from(ii + 1, others...);
-            else
-                return false;
+            return false;
         }
 
     public:
@@ -158,13 +158,17 @@ namespace MsgLite {
         // Even if not fully matched, part of the arguments can be already
         // changed before a mismatch is detected. It is suggested to put const
         // filters at the start of arguments.
-        template <typename... Types>
-        bool parse(Types&... args) const
+        bool parse(void) const
         {
-            if (len != sizeof...(args)) {
+            return len == 0;
+        }
+        template <typename Type, typename... Types>
+        bool parse(Type& first, Types&... others) const
+        {
+            if (len != 1 + sizeof...(others)) {
                 return false;
             }
-            return parse_from(0, args...);
+            return parse_from(0, first, others...);
         }
     };
 

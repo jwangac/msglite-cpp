@@ -61,6 +61,6 @@ Objects can be:
 - 8/16/32/64-bit unsigned integer
 - 8/16/32/64-bit signed integer
 - 32/64-bit floating point number
-- Strings (up to 15 characters)
+- Strings (up to 15 characters, cannot hold '\0')
 
 The MsgLite format ensures that each valid message, after serialization, is no longer than 247 bytes. Therefore, the unpacker can reject data that is too long, ensuring self-recovery from corrupted data.
