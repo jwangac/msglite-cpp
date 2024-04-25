@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 namespace MsgLite {
     struct Object {
@@ -113,6 +114,58 @@ namespace MsgLite {
 
         // Returns byte size after serialization, -1 if invalid message.
         int16_t size() const;
+
+    private:
+        // Support functions for parse()
+        bool parse_from(uint8_t ii)
+        {
+            return ii == len; // always true
+        }
+        template <typename Type, typename... Types>
+        bool parse_from(uint8_t ii, Type& first, Types&... others)
+        {
+            // Const input is used as filter.
+            if (std::is_const<Type>::value) {
+                if (obj[ii] == Object(first))
+                    return parse_from(ii + 1, others...);
+                return false;
+            }
+
+            // Non-const input is parsed from message.
+            bool ok = obj[ii].cast_to(first);
+            if (ok)
+                return parse_from(ii + 1, others...);
+            else
+                return false;
+        }
+
+    public:
+        // parse is a handy function that dumps a message's content to its
+        // arguments. It requires the message's objects and the arguments must
+        // have the same length, type, and value for const arguments.
+        //
+        // Const arguments are used as filters. For example:
+        //
+        //     uint32_t x;
+        //     msg.parse("hello", x);
+        //
+        // This will check if the message length is two, the first is a
+        // String "hello", and the second is Uint32.
+        // If it is, x is set to the value in the message.
+        //
+        // Returns true if fully matched, false otherwise.
+        //
+        // Even if not fully matched, part of the arguments can be already
+        // changed before a mismatch is detected. It is suggested to put const
+        // filters at the start of arguments.
+        template <typename... Types>
+        bool parse(Types&... args)
+        {
+            if (len != sizeof...(args)) {
+                return false;
+            }
+            return parse_from(0, args...);
+        }
     };
 
     const int MIN_MSG_LEN = (1 + (1 + 4) + (1 + 0));             // = 7
