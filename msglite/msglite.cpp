@@ -451,6 +451,178 @@ bool MsgLite::operator==(const Object& lhs, const Object& rhs)
         return false; // this should never happen
 }
 
+// Converting functions that return true if types match.
+bool Object::cast_to(bool& x)
+{
+    if (type == Bool) {
+        // An object marked as a bool type but having a value other than
+        // 0/1 (mostly due to a mistake) can cause undefined behavior.
+        // Use the 'volatile' keyword to enforce a check here.
+        volatile uint8_t bool_in_byte = as.String[0];
+        if (bool_in_byte != 0 && bool_in_byte != 1)
+            return false;
+        x = as.Bool;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(uint8_t& x)
+{
+    if (type == Uint8) {
+        x = as.Uint8;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(uint16_t& x)
+{
+    if (type == Uint16) {
+        x = as.Uint16;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(uint32_t& x)
+{
+    if (type == Uint32) {
+        x = as.Uint32;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(uint64_t& x)
+{
+    if (type == Uint64) {
+        x = as.Uint64;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(int8_t& x)
+{
+    if (type == Int8) {
+        x = as.Int8;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(int16_t& x)
+{
+    if (type == Int16) {
+        x = as.Int16;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(int32_t& x)
+{
+    if (type == Int32) {
+        x = as.Int32;
+        return true;
+    }
+    return false;
+}
+
+bool Object::cast_to(int64_t& x)
+{
+    if (type == Int64) {
+        x = as.Int64;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(float& x)
+{
+    if (type == Float) {
+        x = as.Float;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(double& x)
+{
+    if (type == Double) {
+        x = as.Double;
+        return true;
+    }
+    return false;
+}
+bool Object::cast_to(char* x)
+{
+    if (type == String) {
+        int len = custom_strnlen(as.String, 16);
+        if (len > 15)
+            return false;
+        for (int ii = 0; ii < len; ++ii)
+            x[ii] = as.String[ii];
+        x[len] = '\0';
+        return true;
+    }
+    return false;
+}
+
+// Dummy converting functions that do nothing and return true.
+bool Object::cast_to(const bool& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const uint8_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const uint16_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const uint32_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const uint64_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const int8_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const int16_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const int32_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const int64_t& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const float& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const double& x)
+{
+    (void)x;
+    return true;
+}
+bool Object::cast_to(const char* x)
+{
+    (void)x;
+    return true;
+}
+
 // Returns byte size after serialization, -1 if invalid message.
 int16_t Message::size() const
 {

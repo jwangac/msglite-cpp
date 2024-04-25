@@ -59,6 +59,34 @@ namespace MsgLite {
         //
         // Remark: NaN != NaN but Object(NaN) == Object(NaN)
         friend bool operator==(const Object& lhs, const Object& rhs);
+
+        // Converting functions that return true if types match.
+        bool cast_to(bool& x);
+        bool cast_to(uint8_t& x);
+        bool cast_to(uint16_t& x);
+        bool cast_to(uint32_t& x);
+        bool cast_to(uint64_t& x);
+        bool cast_to(int8_t& x);
+        bool cast_to(int16_t& x);
+        bool cast_to(int32_t& x);
+        bool cast_to(int64_t& x);
+        bool cast_to(float& x);
+        bool cast_to(double& x);
+        bool cast_to(char* x); // Assumes sizeof(x) >= 16
+
+        // Dummy converting functions that do nothing and return true.
+        bool cast_to(const bool& x);
+        bool cast_to(const uint8_t& x);
+        bool cast_to(const uint16_t& x);
+        bool cast_to(const uint32_t& x);
+        bool cast_to(const uint64_t& x);
+        bool cast_to(const int8_t& x);
+        bool cast_to(const int16_t& x);
+        bool cast_to(const int32_t& x);
+        bool cast_to(const int64_t& x);
+        bool cast_to(const float& x);
+        bool cast_to(const double& x);
+        bool cast_to(const char* x);
     };
 
     bool operator==(const Object& lhs, const Object& rhs);
