@@ -209,10 +209,15 @@ namespace MsgLite {
         // 2. Call get() repeatedly to get bytes. Returns -1 to indicate the end.
         int get(void);
 
+        // Constructor
         Packer(void);
 
-    private:
+    public:
+        // Exposed internal buffer. After put(), it contains the message's
+        // serialization bytes.
         Buffer buf;
+
+    private:
         uint8_t pos;
     };
 
@@ -234,10 +239,15 @@ namespace MsgLite {
         // change it.
         const Message& get(void);
 
+        // Constructor
         Unpacker(void);
 
-    private:
+    public:
+        // Exposed internal buffer. After a successful put(), it contains the
+        // message's serialization bytes.
         Buffer buf;
+
+    private:
         int8_t remaining_objects, remaining_bytes;
         uint32_t crc_header, crc_body;
         Message msg;
