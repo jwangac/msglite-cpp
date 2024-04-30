@@ -212,8 +212,8 @@ namespace MsgLite {
         Packer(void);
 
     private:
-        uint8_t raw_buf[MAX_MSG_LEN];
-        uint8_t pos, len;
+        Buffer buf;
+        uint8_t pos;
     };
 
     // Stream unpacker.

@@ -976,33 +976,31 @@ bool MsgLite::Unpack(const Buffer& buf, Message& msg)
 // Stream packer constructor
 Packer::Packer(void)
 {
-    // ensure pos > len, which makes get() returns -1.
+    // ensure pos > buf.len, which makes get() returns -1.
     pos = MAX_MSG_LEN + 1;
-    len = 0;
+    buf.len = 0;
 }
 
 // 1. Call put() to serialize a message. Returns true if successful.
 bool Packer::put(const Message& msg)
 {
-    int16_t ret = Pack(msg, raw_buf, sizeof(raw_buf));
-    if (ret < 0) {
-        // ensure pos > len, which makes get() returns -1.
+    if (!Pack(msg, buf)) {
+        // ensure pos > buf.len, which makes get() returns -1.
         pos = MAX_MSG_LEN + 1;
-        len = 0;
+        buf.len = 0;
         return false;
     }
     pos = 0;
-    len = (uint8_t)ret;
     return true;
 }
 
 // 2. Call get() repeatedly to get bytes. Returns -1 to indicate the end.
 int Packer::get()
 {
-    ReadonlySlice buf(raw_buf, sizeof(raw_buf));
+    ReadonlySlice slice(buf.data, buf.len);
 
-    if (pos < len)
-        return buf[pos++];
+    if (pos < buf.len)
+        return slice[pos++];
     else
         return -1;
 }
