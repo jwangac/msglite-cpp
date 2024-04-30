@@ -237,8 +237,7 @@ namespace MsgLite {
         Unpacker(void);
 
     private:
-        uint8_t raw_buf[MAX_MSG_LEN];
-        uint8_t len;
+        Buffer buf;
         int8_t remaining_objects, remaining_bytes;
         uint32_t crc_header, crc_body;
         Message msg;

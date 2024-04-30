@@ -1008,7 +1008,7 @@ int Packer::get()
 // Stream unpacker constructor
 Unpacker::Unpacker(void)
 {
-    len = 0;
+    buf.len = 0;
 }
 
 // 1. Call put() repeatedly to drive the unpacker. It returns true if a
@@ -1019,30 +1019,30 @@ Unpacker::Unpacker(void)
 // retrieve the message.
 bool Unpacker::put(uint8_t byte)
 {
-    Slice buf(raw_buf, sizeof(raw_buf));
+    Slice s(buf.data, sizeof(buf.data));
 
-    if (len >= MAX_MSG_LEN)
-        len = 0; // failed, reset the unpacker
+    if (buf.len >= MAX_MSG_LEN)
+        buf.len = 0; // failed, reset the unpacker
 
-    switch (len) {
+    switch (buf.len) {
         // Header
         case 0: {
             if (byte != 0x92) {
-                len = 0; // failed, reset the unpacker
+                buf.len = 0; // failed, reset the unpacker
                 return false;
             }
-            buf[len++] = byte;
+            s[buf.len++] = byte;
             return false;
         }
         // Checksum
         case 1: {
             if (byte != 0xCE) {
-                len = 0; // failed, reset the unpacker
+                buf.len = 0; // failed, reset the unpacker
                 return false;
             }
             crc_header = 0;
             crc_body = 0;
-            buf[len++] = byte;
+            s[buf.len++] = byte;
             return false;
         }
         case 2:
@@ -1050,16 +1050,16 @@ bool Unpacker::put(uint8_t byte)
         case 4:
         case 5: {
             crc_header = (crc_header << 8) + byte;
-            buf[len++] = byte;
+            s[buf.len++] = byte;
             return false;
         }
         // Body
         default: {
-            if (len == 6) {
+            if (buf.len == 6) {
                 // Message length
                 remaining_objects = byte - 0x90;
                 if (remaining_objects > 15) {
-                    len = 0; // failed, reset the unpacker
+                    buf.len = 0; // failed, reset the unpacker
                     return false;
                 }
                 remaining_bytes = 0;
@@ -1071,21 +1071,21 @@ bool Unpacker::put(uint8_t byte)
                         remaining_objects--;
                         remaining_bytes = bytes_of_type(byte);
                         if (remaining_bytes < 0) {
-                            len = 0; // failed, reset the unpacker
+                            buf.len = 0; // failed, reset the unpacker
                             return false;
                         }
                     } else {
-                        len = 0; // failed, reset the unpacker
+                        buf.len = 0; // failed, reset the unpacker
                         return false;
                     }
                 }
             }
             crc_body = crc32b(crc_body, ReadonlySlice(&byte, 1));
-            buf[len++] = byte;
+            s[buf.len++] = byte;
         }
     }
 
-    if (len < MIN_MSG_LEN)
+    if (buf.len < MIN_MSG_LEN)
         return false; // still too short
 
     if (remaining_objects > 0 || remaining_bytes > 0)
@@ -1095,8 +1095,8 @@ bool Unpacker::put(uint8_t byte)
         return false; // checksum mismatch
     }
 
-    unpack_ll_status status = unpack_ll_body(buf.slice(0, len), msg);
-    len = 0; // Whether successful or not, we need to reset the unpack.
+    unpack_ll_status status = unpack_ll_body(s.slice(0, buf.len), msg);
+    buf.len = 0; // Whether successful or not, we need to reset the unpack.
     return status == unpack_ll_success;
 }
 
