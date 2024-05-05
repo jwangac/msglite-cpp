@@ -58,6 +58,8 @@ namespace MsgLite {
         // Checks if they are both valid and have same type/value.
         // This ensures that after serialization, they have the same byte array.
         //
+        // Returns false if any object is invalid.
+        //
         // Remark: NaN != NaN but Object(NaN) == Object(NaN)
         friend bool operator==(const Object& lhs, const Object& rhs);
 
@@ -116,6 +118,12 @@ namespace MsgLite {
         // Returns byte size after serialization, -1 if invalid message.
         int16_t size() const;
 
+        // Checks if they are both valid and have same valid objects.
+        // This ensures that after serialization, they have the same byte array.
+        //
+        // Returns false if any message or object within it is invalid.
+        friend bool operator==(const Message& lhs, const Message& rhs);
+
     private:
         // Support functions for parse()
         bool parse_from(uint8_t ii) const
@@ -171,6 +179,8 @@ namespace MsgLite {
             return parse_from(0, first, others...);
         }
     };
+
+    bool operator==(const Message& lhs, const Message& rhs);
 
     const int MIN_MSG_LEN = (1 + (1 + 4) + (1 + 0));             // = 7
     const int MAX_MSG_LEN = (1 + (1 + 4) + (1 + 15 * (15 + 1))); // = 247

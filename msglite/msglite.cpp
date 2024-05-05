@@ -1110,6 +1110,16 @@ const Message& Unpacker::get(void)
     return msg;
 }
 
+bool MsgLite::operator==(const Message& lhs, const Message& rhs)
+{
+    if (lhs.len > 15 || lhs.len != rhs.len)
+        return false;
+    for (int ii = 0; ii < lhs.len; ++ii)
+        if (!(lhs.obj[ii] == rhs.obj[ii]))
+            return false;
+    return true;
+}
+
 // Exposed checksum function used by MsgLite
 uint32_t MsgLite::CRC32B(uint32_t crc, const uint8_t* raw_buf, size_t size)
 {
