@@ -33,9 +33,11 @@ int main(void)
             return 1;
         }
 
-        auto unpack_successful = MsgLite::Unpack(buf, msg);
+        MsgLite::Message msg2;
+        auto unpack_successful = MsgLite::Unpack(buf, msg2);
         if (unpack_successful) {
             printf("Unpack successful\n");
+            assert(msg == msg2);
         } else {
             printf("Unpack failed\n\n");
             return 1;
@@ -57,9 +59,11 @@ int main(void)
             return 1;
         }
 
-        auto unpack_successful = MsgLite::Unpack(buf, msg);
+        MsgLite::Message msg2;
+        auto unpack_successful = MsgLite::Unpack(buf, msg2);
         if (unpack_successful) {
             printf("Unpack successful\n\n");
+            assert(msg == msg2);
         } else {
             printf("Unpack failed\n");
             return 1;
