@@ -142,6 +142,9 @@ int main(void)
         for (int ii = 0; ii < buf.len; ++ii) {
             if (unpacker.put(buf.data[ii])) {
                 assert(ii == buf.len - 1);
+                assert(buf.len == unpacker.buf.len);
+                for (int jj = 0; jj < buf.len; ++jj)
+                    assert(buf.data[jj] == unpacker.buf.data[jj]);
                 break;
             }
             assert(ii < buf.len - 1);
@@ -152,6 +155,9 @@ int main(void)
         for (int ii = 0; ii < buf.len; ++ii) {
             if (unpacker.put(buf.data[ii])) {
                 assert(ii == buf.len - 1);
+                assert(buf.len == unpacker.buf.len);
+                for (int jj = 0; jj < buf.len; ++jj)
+                    assert(buf.data[jj] == unpacker.buf.data[jj]);
                 break;
             }
             assert(ii < buf.len - 1);
