@@ -258,6 +258,7 @@ namespace MsgLite {
         Buffer buf;
 
     private:
+        bool reset_buffer_on_next_put;
         int8_t remaining_objects, remaining_bytes;
         uint32_t crc_header, crc_body;
         Message msg;

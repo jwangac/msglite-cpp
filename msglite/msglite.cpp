@@ -1009,6 +1009,7 @@ int Packer::get()
 Unpacker::Unpacker(void)
 {
     buf.len = 0;
+    reset_buffer_on_next_put = false;
 }
 
 // 1. Call put() repeatedly to drive the unpacker. It returns true if a
@@ -1020,6 +1021,11 @@ Unpacker::Unpacker(void)
 bool Unpacker::put(uint8_t byte)
 {
     Slice s(buf.data, sizeof(buf.data));
+
+    if (reset_buffer_on_next_put) {
+        buf.len = 0;
+        reset_buffer_on_next_put = false;
+    }
 
     if (buf.len >= MAX_MSG_LEN)
         buf.len = 0; // failed, reset the unpacker
@@ -1096,8 +1102,12 @@ bool Unpacker::put(uint8_t byte)
     }
 
     unpack_ll_status status = unpack_ll_body(s.slice(0, buf.len), msg);
-    buf.len = 0; // Whether successful or not, we need to reset the unpack.
-    return status == unpack_ll_success;
+    if (status == unpack_ll_success) {
+        reset_buffer_on_next_put = true;
+        return true;
+    }
+    buf.len = 0; // reset the unpacker
+    return false;
 }
 
 // 2. Retrieve a reference to the message. If this function does not
