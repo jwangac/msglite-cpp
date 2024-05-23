@@ -17,24 +17,24 @@ static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 double required"
 #define Assert(x, msg)
 #endif
 
-// helper function for bool checking
-//
-// An object marked as a bool type but having a value other than 0 or 1 (due to
-// mistakes) can cause undefined behavior when reading "as.Bool".
-//
-// MsgLite checks this before reading "as.Bool" every time.
-bool broken_bool(const MsgLite::Object& obj)
-{
-    if (obj.type != MsgLite::Object::Bool)
-        return false; // only check bool
-
-    // Use the "volatile" keyword to enforce a check here.
-    volatile uint8_t bool_in_byte = obj.as.String[0];
-    return bool_in_byte != 0 && bool_in_byte != 1;
-}
-
-// helper classes for bound checking
+// Helper functions and classes
 namespace {
+    // Helper function for bool checking
+    //
+    // An object marked as a bool type but having a value other than 0 or 1 (due to
+    // mistakes) can cause undefined behavior when reading "as.Bool".
+    //
+    // MsgLite checks this before reading "as.Bool" every time.
+    bool broken_bool(const MsgLite::Object& obj)
+    {
+        if (obj.type != MsgLite::Object::Bool)
+            return false; // only check bool
+
+        // Use the "volatile" keyword to enforce a check here.
+        volatile uint8_t bool_in_byte = obj.as.String[0];
+        return bool_in_byte != 0 && bool_in_byte != 1;
+    }
+
     // Byte array with (conditional) bound checking
     class Slice {
     public:
