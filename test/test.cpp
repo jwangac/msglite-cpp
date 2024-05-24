@@ -332,7 +332,7 @@ void test_object_constructors()
     assert(MsgLite::Object((double)0).type == MsgLite::Object::Double);
     assert(MsgLite::Object("").type == MsgLite::Object::String);
 
-    // test overlong string, should be truncated
+    // Test overlong string, should be truncated
     MsgLite::Object x("0123456789ABCDEF");
     assert(x.as.String[14] == 'E');
     assert(x.as.String[15] != 'F' && x.as.String[15] == '\0');
@@ -357,9 +357,9 @@ void test_object_size()
     assert(MsgLite::Object("").size() == 1);
     assert(MsgLite::Object("helloworld").size() == 11);
 
-    // test overlong string
+    // Test overlong string
     MsgLite::Object broken("0123456789ABCDE");
-    broken.as.String[15] = 'F';
+    broken.as.String[15] = 'F'; // Corrupt the string
     assert(broken.size() == -1);
 }
 
@@ -367,7 +367,7 @@ void test_object_serialization()
 {
     MsgLite::Buffer buf;
 
-    assert(!MsgLite::Pack(MsgLite::Object(), buf));
+    assert(!MsgLite::Pack(MsgLite::Object(), buf)); // Untyped should fail
 
     assert(MsgLite::Pack(MsgLite::Object(false), buf));
     assert_buffer_equal(buf, 7, 0xC2);
@@ -407,6 +407,26 @@ void test_object_serialization()
 
     assert(MsgLite::Pack(MsgLite::Object("helloworld"), buf));
     assert_buffer_equal(buf, 7, 0xAA, 0x68, 0x65, 0x6C, 0x6C, 0x6F, 0x77, 0x6F, 0x72, 0x6C, 0x64);
+
+    // Deserialize and check correctness
+    MsgLite::Message msg;
+    assert(MsgLite::Unpack(buf, msg));
+    assert(msg.len == 1 && msg.obj[0].type == MsgLite::Object::String);
+    assert(strcmp(msg.obj[0].as.String, "helloworld") == 0);
+}
+
+void test_equality_comparison()
+{
+    assert(MsgLite::Object(NaN) == MsgLite::Object(NaN));
+    assert(MsgLite::Object(Inf) == MsgLite::Object(Inf));
+    assert(MsgLite::Object(true) == MsgLite::Object(true));
+    assert(MsgLite::Object(false) == MsgLite::Object(false));
+    assert(MsgLite::Object((uint8_t)1) == MsgLite::Object((uint8_t)1));
+    assert(MsgLite::Object((int8_t)-1) == MsgLite::Object((int8_t)-1));
+    assert(MsgLite::Object(1.0f) == MsgLite::Object(1.0f));
+    assert(MsgLite::Object(2.0) == MsgLite::Object(2.0));
+    assert(MsgLite::Object("hello") == MsgLite::Object("hello"));
+    assert(!(MsgLite::Object("hello") == MsgLite::Object("world")));
 }
 
 void test_checksum()
@@ -459,6 +479,7 @@ void pedantic_checks()
     test_object_constructors();
     test_object_size();
     test_object_serialization();
+    test_equality_comparison();
     test_checksum();
     test_parse();
 }
