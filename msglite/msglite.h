@@ -250,7 +250,7 @@ namespace MsgLite {
         const Message& get(void);
 
         // Constructor
-        Unpacker(void);
+        Unpacker(uint8_t max_msg_len = MAX_MSG_LEN);
 
     public:
         // Exposed internal buffer. After a successful put(), it contains the
@@ -259,6 +259,7 @@ namespace MsgLite {
 
     private:
         bool reset_buffer_on_next_put;
+        uint8_t max_msg_len;
         int8_t remaining_objects, remaining_bytes;
         uint32_t crc_header, crc_body;
         Message msg;

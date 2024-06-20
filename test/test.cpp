@@ -179,11 +179,13 @@ int main(void)
 
     // test stream unpacker with lossy data
     if (true) {
+        MsgLite::Unpacker limited_unpacker(40);
+
         FILE* fd = fopen("./test/data_robustness.bin", "rb");
 
         int c, cnt = 0;
         while ((c = fgetc(fd)) != EOF) {
-            if (unpacker.put(c))
+            if (limited_unpacker.put(c))
                 cnt++;
         }
         assert(4500 <= cnt && cnt <= 5500);

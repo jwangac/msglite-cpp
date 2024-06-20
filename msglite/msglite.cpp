@@ -1006,10 +1006,13 @@ int Packer::get()
 }
 
 // Stream unpacker constructor
-Unpacker::Unpacker(void)
+Unpacker::Unpacker(uint8_t max_msg_len)
 {
     buf.len = 0;
     reset_buffer_on_next_put = false;
+    if (max_msg_len > MAX_MSG_LEN)
+        max_msg_len = MAX_MSG_LEN;
+    this->max_msg_len = max_msg_len;
 }
 
 // 1. Call put() repeatedly to drive the unpacker. It returns true if a
@@ -1027,7 +1030,7 @@ bool Unpacker::put(uint8_t byte)
         reset_buffer_on_next_put = false;
     }
 
-    if (buf.len >= MAX_MSG_LEN)
+    if (buf.len >= max_msg_len)
         buf.len = 0; // failed, reset the unpacker
 
     switch (buf.len) {
